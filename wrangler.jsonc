@@ -1,0 +1,14 @@
+{
+  // Deployment target for the cloud version. No local PC or paid tier required.
+  "name": "vaosprofit-retailpilot",
+  "main": "cloud/dist/worker.mjs",
+  "compatibility_date": "2026-10-26",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "vaosprofit-retailpilot",
+      "database_id": "3903354f-8227-4641-8d00-71aff648e395"
+    }
+  ]
+}

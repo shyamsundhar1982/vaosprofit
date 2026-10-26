@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RetailPilot · Replenishment Intelligence</title>
+  <style>
+    :root { --bg:#f4f5f2; --ink:#26342b; --muted:#65716a; --line:#dae1dc; --green:#11684b; --mint:#e6f4eb; --amber:#99610c; --gold:#c5a66d; }
+    *{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(145deg,#f6f7f5,#e9efe9)}
+    header{display:flex;align-items:center;justify-content:space-between;padding:20px min(4vw,56px);border-bottom:1px solid var(--line);background:#ffffffc9;gap:20px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:14px}.mark{border-radius:12px;background:var(--green);color:white;padding:9px 14px;font-weight:900;font-size:22px}
+    h1{font-size:23px;margin:0;letter-spacing:-.7px}h2{font-size:19px;margin:0 0 8px}h3{font-size:15px;margin:0 0 8px}.sub{font-size:12px;color:var(--muted)}
+    main{max-width:1380px;margin:auto;padding:28px min(4vw,56px) 60px}.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.spread{justify-content:space-between}
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 4px 25px #2448350b}.intro{border-left:5px solid var(--gold);margin-bottom:20px}
+    .muted{color:var(--muted)}.small{font-size:13px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0 24px}
+    .metric{border:1px solid var(--line);background:#fff;border-radius:15px;padding:20px}.metric strong{display:block;font-size:27px;letter-spacing:-1px;margin-top:8px}.metric span{font-size:12px;color:var(--muted)}
+    input,select,button{font:inherit}input,select{border:1px solid #cad5cc;background:white;border-radius:10px;color:var(--ink);padding:10px;max-width:100%}input[type=password]{min-width:275px;flex:1}
+    button{border:1px solid var(--green);background:var(--green);color:white;border-radius:10px;padding:10px 16px;font-weight:650;cursor:pointer}button:hover{filter:brightness(1.1)}button.secondary{background:#fff;color:var(--green)}button:disabled{opacity:.5;cursor:not-allowed}
+    .bar{display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin-bottom:20px}.bar label{font-size:12px;color:var(--muted);display:grid;gap:5px}.bar select,.bar input{min-width:145px}
+    .two{display:grid;grid-template-columns:2fr 1fr;gap:20px}.badge{font-size:11px;padding:5px 8px;border-radius:99px;display:inline-block;font-weight:750;text-transform:uppercase;letter-spacing:.4px;background:#eaf1ec;color:var(--green)}
+    .badge.review{background:#fff3d9;color:var(--amber)}.badge.withheld{background:#fde9e6;color:#9e3d2b}
+    table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}th,td{padding:13px 11px;border-bottom:1px solid #e8eeea;white-space:nowrap}td.name{white-space:normal;min-width:130px}.tablewrap{overflow:auto}tr:hover td{background:#f8faf7}
+    .imports{display:grid;gap:14px}.imports article{border-top:1px solid var(--line);padding-top:12px}.imports input{width:100%;font-size:12px}.imports button{margin-top:8px;width:100%}
+    .note{border:1px solid #ecd69b;background:#fff9e8;padding:13px;border-radius:12px;font-size:13px}.message{font-size:13px;min-height:20px;margin-top:9px;color:var(--green)}.error{color:#a33e36}
+    .tag{border:1px solid var(--line);border-radius:99px;padding:4px 9px;color:var(--muted);font-size:12px}
+    footer{color:var(--muted);font-size:12px;margin-top:30px}
+    @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}}@media(max-width:550px){.grid{grid-template-columns:1fr 1fr}.metric strong{font-size:22px}header,.card{padding:16px}main{padding:16px}button{width:100%}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="mark">R</div><div><h1>RetailPilot <span class="sub">/ INTELLIGENCE</span></h1><div class="sub">Demand forecasting & replenishment · pilot 0.1</div></div></div>
+    <div class="row"><span class="tag" id="identity">Not connected</span><span class="badge">Drafts only · no purchasing</span></div>
+  </header>
+  <main>
+    <section class="card intro">
+      <div class="row spread"><div><h2>Store replenishment command center</h2><div class="muted small">Connect with a tenant token. Data remains isolated by retailer. Figures are recommendations, not approved purchase orders.</div></div></div>
+      <div class="row" style="margin-top:16px"><input id="token" type="password" placeholder="Paste this retailer's API token" aria-label="Retailer API token" autocomplete="off"/><button id="connect">Connect</button><button id="demo" class="secondary" hidden>Explore synthetic demo</button><button id="disconnect" class="secondary">Disconnect</button></div>
+      <div class="message" id="message" role="status" aria-live="polite"></div>
+    </section>
+    <section class="bar"><label>Store<select id="store" disabled><option>Connect first</option></select></label><label>Completed sales through<input id="asof" type="date" /></label><label>Review cycle<select id="review"><option value="3">3 days</option><option value="7" selected>7 days</option><option value="14">14 days</option></select></label><button id="refresh" disabled>Refresh analysis</button><button class="secondary" id="export" disabled>Export PO drafts (CSV)</button></section>
+    <div class="grid">
+      <div class="metric"><span>Products analysed</span><strong id="skus">—</strong></div>
+      <div class="metric"><span>Eligible forecasts</span><strong id="actionable">—</strong></div>
+      <div class="metric"><span>Recommended order lines</span><strong id="lines">—</strong></div>
+      <div class="metric"><span>Estimated draft value (₹)</span><strong id="value">—</strong></div>
+    </div>
+    <div class="two">
+      <section class="card"><div class="row spread"><div><h2>Replenishment queue</h2><div class="small muted" id="analysis-note">Connect to load recommendations</div></div><select id="filter"><option value="all">All products</option><option value="order">Order suggested</option><option value="review">Review required</option><option value="withheld">Data incomplete</option></select></div>
+        <div class="tablewrap"><table><thead><tr><th>Product</th><th>In stock</th><th>Daily demand</th><th>Cover</th><th>Draft qty</th><th>Review</th></tr></thead><tbody id="items"><tr><td colspan="6" class="muted">No data loaded</td></tr></tbody></table></div>
+      </section>
+      <section class="card"><h2>Pilot data intake</h2><p class="muted small">Import one UTF-8 CSV at a time. Re-importing the same records updates them without duplicating sales.</p>
+        <div class="imports">
+          <article><h3>1. Product catalog</h3><input id="products" type="file" accept=".csv,text/csv" aria-label="Product catalog CSV"/><button class="secondary" data-import="products" disabled>Import products</button></article>
+          <article><h3>2. Daily stock snapshot</h3><input id="inventory" type="file" accept=".csv,text/csv" aria-label="Daily inventory CSV"/><button class="secondary" data-import="inventory" disabled>Import inventory</button></article>
+          <article><h3>3. Daily sales history</h3><input id="sales" type="file" accept=".csv,text/csv" aria-label="Daily sales CSV"/><button class="secondary" data-import="sales" disabled>Import sales</button></article>
+        </div>
+        <p class="note"><strong>Data quality gate:</strong> Explicit zero-sales rows are required for every SKU/day. At least 14 complete days and a current stock snapshot are needed for a recommendation. Sales gaps are not treated as zero demand.</p>
+        <h3>Forecast diagnostic</h3><p id="backtest" class="small muted">Requires 21 complete historical sales days.</p>
+      </section>
+    </div>
+    <footer>RetailPilot 0.1 · Local pilot · Recommendations only · No payment, POS or automated purchase execution · Review data quality before making inventory decisions.</footer>
+  </main>
+  <script>
+    let token = "", recommendations = [];
+    const $ = id => document.getElementById(id);
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+    $('asof').value = [yesterday.getFullYear(), String(yesterday.getMonth()+1).padStart(2,'0'), String(yesterday.getDate()).padStart(2,'0')].join('-');
+    const currency = n => Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0});
+    function status(message, error=false){$('message').textContent=message;$('message').className='message'+(error?' error':'');}
+    async function api(path,options={}) {
+      if (!token) throw new Error('Enter a retailer API token first');
+      const response=await fetch(path,{...options,headers:{Authorization:'Bearer '+token,...(options.headers||{})}});
+      if (!response.ok) { let err={};try{err=await response.json();}catch{}throw new Error(err.error||`HTTP ${response.status}`); }
+      return response;
+    }
+    // Split at genuine CSV record boundaries (supports quoted fields/newlines).
+    function csvChunks(source){
+      let quoted=false,line='',rows=[];
+      source=source.replace(/^\uFEFF/,'');
+      for(let i=0;i<source.length;i++){
+        const c=source[i];line+=c;
+        if(c==='"'){if(quoted&&source[i+1]==='"'){line+=source[++i];}else quoted=!quoted;}
+        else if(c==='\n'&&!quoted){if(line.trim())rows.push(line);line='';}
+      }
+      if(quoted)throw Error('Unclosed quotation in CSV');
+      if(line.trim())rows.push(line);
+      if(rows.length<2)throw Error('CSV needs a header and at least one data row');
+      const header=rows.shift(),chunks=[];
+      let current=[],bytes=header.length;
+      for(const row of rows){if(current.length&&(current.length>=400||bytes+row.length>200000)){chunks.push(header+'\n'+current.join(''));current=[];bytes=header.length;}
+        current.push(row.endsWith('\n')?row:row+'\n');bytes+=row.length;}
+      if(current.length)chunks.push(header+'\n'+current.join(''));
+      return chunks;
+    }
+    function query(){return new URLSearchParams({store:$('store').value,as_of:$('asof').value,review_days:$('review').value}).toString();}
+    function render(){
+      const filter=$('filter').value;
+      const matching=recommendations.filter(r=>filter==='all'||(filter==='order'&&r.suggested_order>0)||(filter==='review'&&r.status==='review')||(filter==='withheld'&&r.status==='withheld'));
+      const body=$('items');body.replaceChildren();
+      if(!matching.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;td.textContent='No matching records';tr.append(td);body.append(tr);return;}
+      for(const r of matching){
+        const tr=document.createElement('tr');
+        const values=[r.name+' · '+r.sku,r.on_hand??'—',r.forecast_daily??'—',r.days_of_cover??'—',r.suggested_order,r.status];
+        values.forEach((v,index)=>{const td=document.createElement('td');td.textContent=String(v);if(index===0)td.className='name';if(index===5){const s=document.createElement('span');s.className='badge '+r.status;s.textContent=r.status; s.title=r.flags.join(', ')||'Data sufficient';td.replaceChildren(s);}tr.append(td);});
+        body.append(tr);
+      }
+    }
+    async function refresh(){
+      try{
+        const q=query();
+        const [items,totals,check]=await Promise.all([
+          api('/api/recommendations?'+q).then(r=>r.json()),
+          api('/api/summary?'+q).then(r=>r.json()),
+          api('/api/backtest?'+q).then(r=>r.json())
+        ]);
+        recommendations=items.items;
+        $('skus').textContent=totals.skus;$('actionable').textContent=totals.actionable;$('lines').textContent=totals.order_lines;$('value').textContent=currency(totals.draft_value);
+        $('analysis-note').textContent=`${totals.withheld} held for data quality · ${totals.review_needed} need manual review`;
+        $('backtest').textContent=check.evaluated_skus ? `${check.evaluated_skus} products evaluated · forecast WAPE ${check.forecast_wape_pct??'N/A'}% · naïve baseline ${check.naive_wape_pct??'N/A'}%` : 'Insufficient complete history for a 7-day backtest.';
+        render();status('Analysis refreshed. Exported orders remain drafts.');
+      }catch(e){status(e.message,true);}
+    }
+    $('connect').onclick=async()=>{
+      token=$('token').value.trim();
+      try {const me=await api('/api/me').then(r=>r.json());$('identity').textContent=me.name;
+        $('store').replaceChildren();for(const s of me.stores){const option=document.createElement('option');option.value=s.id;option.textContent=s.name;$('store').append(option);}
+        document.querySelectorAll('button[data-import],#refresh,#export').forEach(el=>el.disabled=false);
+        $('token').value='';await refresh();
+      }catch(e){token='';status(e.message,true);}
+    };
+    $('demo').onclick=async()=>{$('token').value='demo-public';await $('connect').onclick();};
+    $('disconnect').onclick=()=>{token='';recommendations=[];$('identity').textContent='Not connected';document.querySelectorAll('button[data-import],#refresh,#export').forEach(el=>el.disabled=true);$('store').replaceChildren();$('items').replaceChildren();['skus','actionable','lines','value'].forEach(id=>$(id).textContent='—');status('Disconnected');};
+    $('refresh').onclick=refresh;$('filter').onchange=render;
+    $('export').onclick=async()=>{try{const r=await api('/api/drafts.csv?'+query());const blob=await r.blob();const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='purchase-order-DRAFT.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status('Draft CSV downloaded. Check flags before approval.');}catch(e){status(e.message,true);}};
+    document.querySelectorAll('button[data-import]').forEach(btn=>btn.onclick=async()=>{
+      const kind=btn.dataset.import,file=$(kind).files[0];if(!file){status('Choose a '+kind+' CSV file first',true);return;}
+      try{btn.disabled=true;const chunks=csvChunks(await file.text());let done=0;
+        for(let i=0;i<chunks.length;i++){const r=await api('/api/import/'+kind,{method:'POST',headers:{'Content-Type':'text/csv'},body:chunks[i]});const result=await r.json();done+=result.imported;status(`${done} ${kind} rows imported (${i+1}/${chunks.length} batches)`);}
+        await refresh();status(`${done} ${kind} rows imported. Verify source reconciliation.`);
+      }catch(e){status(e.message,true);}finally{btn.disabled=false;}
+    });
+    fetch('/api/health').then(r=>r.json()).then(v=>{if(v.status==='cloud-pilot')$('demo').hidden=false;}).catch(()=>{});
+  </script>
+</body>
+</html>
