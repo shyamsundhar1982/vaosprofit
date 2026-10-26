@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.sqlite3-*
+.venv/
+.DS_Store
+*.log
+pilot_customer_data/
